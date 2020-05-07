@@ -1,40 +1,28 @@
+"""This """
+from job import Job
+
 import boto3
-import uuid
+import requests
 
-client = boto3.client('transcribe')
+transcribe = boto3.client('transcribe')
 
-class Amazon:
+def from_amazon_job(job_name)
+"""Create a Job Object based on the TranscriptiobJobName"""
+        job = transcribe.get_transcription_job(TranscriptionJobName=job_name)
+        return from_amazon_uri(job['Transcript']['TranscriptFileUri'])
 
-    def __init__(self, **kwargs):
-        self.output_encryption_kms_key_id =
-                kwargs.get('output_encryption_kms_key_id', uuid.uuid4)
+def from_amazon_uri(uri)
+"""Create a Job Object based on the TranscriptFileUri"""
+        response = requests.get(job_uri)
+        response.raise_for_status()
+        transcription = response.json()
+        name = transcription['jobName']
 
-    def start_transcription_job(
-            self, job, vocabulary=None, vocabulary_filter=None
-            ):
-        """Wrapper for the boto3 start_transcription_job method.
-Takes a transcription job and returns the transcription job"""
+        if 'speaker_labels' in transcription['results']:
+            labels = transcription['results']['speaker_labels']['speakers']
+            speakers = [f'spk_{x}' for x in range(labels)]
 
-        transcription_job_name = Job.key
-        language_code = Job.language
-        media_format = Job.media_format
-        media = {'MediaFileUri': Job.uri}
-        media_sample_rate_hertz = Job.sample_rate # I have never modified this.
-        output_bucket_name = self.output_bucket
-        output_encryption_kms_key_id = self.output_encryption_id
-        settings = {}
-                'show_speaker_labels': Job.has_speakers,
-                'max_speaker_labels': len(Job.speakers),
-                'channel_identification': Job.channel_identification,
-                }
-
-        # Add Vocabulary Settings if included
-        if vocabulary:
-            settings['Vocabulary'] = Vocabulary.name
-
-
-        if vocabulary_filter:
-            settings.update{
-                    'VocabularyFilterName': vocabulary_filter.name,
-                    'VocabularyFilterMethod': vocabulary_filter.filter_method,
-                    }
+        *kwargs = {''}
+        return Job(
+                name=name,
+                )
