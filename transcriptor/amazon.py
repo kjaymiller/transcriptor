@@ -1,4 +1,3 @@
-"""This """
 from job import Job
 
 import boto3
@@ -21,8 +20,11 @@ def from_amazon_uri(uri)
         if 'speaker_labels' in transcription['results']:
             labels = transcription['results']['speaker_labels']['speakers']
             speakers = [f'spk_{x}' for x in range(labels)]
+        else:
+            speakers = []
 
-        *kwargs = {''}
         return Job(
                 name=name,
+                _transcription = transcription,
+                speakers = speakers
                 )
