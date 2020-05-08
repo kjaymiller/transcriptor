@@ -7,16 +7,20 @@
 attrs==19.3.0             # via pytest
 boto3==1.13.3             # via -r requirements.in
 botocore==1.16.3          # via boto3, s3transfer
+certifi==2020.4.5.1       # via requests
+chardet==3.0.4            # via requests
 docutils==0.15.2          # via botocore
+idna==2.9                 # via requests
 jmespath==0.9.5           # via boto3, botocore
-more-itertools==8.2.0     # via pytest
+more-itertools==8.2.0     # via -r requirements.in, pytest
 packaging==20.3           # via pytest
 pluggy==0.13.1            # via pytest
 py==1.8.1                 # via pytest
 pyparsing==2.4.7          # via packaging
 pytest==5.4.1             # via -r requirements.in
 python-dateutil==2.8.1    # via botocore
+requests==2.23.0          # via -r requirements.in
 s3transfer==0.3.3         # via boto3
 six==1.14.0               # via packaging, python-dateutil
-urllib3==1.25.9           # via botocore
+urllib3==1.25.9           # via botocore, requests
 wcwidth==0.1.9            # via pytest

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass
-Class Speaker:
+class Speaker:
     speaker_index: int
     base_name: str=None
     label: str=None
