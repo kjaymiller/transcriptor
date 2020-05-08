@@ -45,7 +45,7 @@ def from_amazon_job(job_name: str) -> Job:
 
 def from_amazon_uri(uri) -> Job:
     """Create a Job Object based on the TranscriptFileUri"""
-    response = requests.get(job_uri)
+    response = requests.get(uri)
     response.raise_for_status()
     transcription = response.json()
     name = transcription['jobName']
@@ -57,15 +57,17 @@ def from_amazon_uri(uri) -> Job:
         markers = [add_marker(x, has_speakers=True) for x in labels['segments']]
 
     else:
+        segments = transcription['results']['items']
         speakers = []
-        items_segments = itertools.split_when(
-            segment, lambda x:x['type']=='punctuation',
+        items_segments = more_itertools.split_when(
+            segments, lambda x:x['type']=='punctuation',
         )
         markers = [add_marker(x) for x in items_segments]
 
     return Job(
             base_text=base_text,
             name=name,
-            _transcription = transcription,
+            transcription=transcription,
             speakers = speakers,
+            markers = markers,
             )

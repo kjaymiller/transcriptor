@@ -1,3 +1,0 @@
-from transcriptor import Job
-
-

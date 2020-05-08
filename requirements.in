@@ -2,3 +2,5 @@ more-itertools
 requests
 pytest
 boto3
+pytest-mock
+requests-mock

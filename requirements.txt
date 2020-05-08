@@ -17,10 +17,12 @@ packaging==20.3           # via pytest
 pluggy==0.13.1            # via pytest
 py==1.8.1                 # via pytest
 pyparsing==2.4.7          # via packaging
-pytest==5.4.1             # via -r requirements.in
+pytest-mock==3.1.0        # via -r requirements.in
+pytest==5.4.1             # via -r requirements.in, pytest-mock
 python-dateutil==2.8.1    # via botocore
-requests==2.23.0          # via -r requirements.in
+requests-mock==1.8.0      # via -r requirements.in
+requests==2.23.0          # via -r requirements.in, requests-mock
 s3transfer==0.3.3         # via boto3
-six==1.14.0               # via packaging, python-dateutil
+six==1.14.0               # via packaging, python-dateutil, requests-mock
 urllib3==1.25.9           # via botocore, requests
 wcwidth==0.1.9            # via pytest

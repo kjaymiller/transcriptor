@@ -9,5 +9,5 @@ class Job:
     base_text: str
     name: str
     markers: typing.List
-    _transcript: typing.Dict
+    transcription: typing.Dict
     speakers: typing.List
