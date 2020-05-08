@@ -3,17 +3,31 @@ import requests
 import requests_mock
 from transcriptor import amazon
 
-segment = {
-        "speaker_label": "spk_0",
-        "start_time": "0.44",
-        "end_time": "3.3",
+
+###SUPPORTING VALUES###
+
+speaker_segment = {
+        "speakers": 4,
+        "segments": [
+            {
+                "start_time": "0.44",
+                "speaker_label": "spk_0",
+                "end_time": "3.3",
+                "items": [
+                    {
+                        "start_time": "0.44",
+                        "speaker_label": "spk_0",
+                        "end_time": "0.99",
+                        },
+                    ]
+        }],
         }
 
-no_speaker_segment = {
-        "speaker_label": "spk_0",
+no_speaker_segment = [{
+        "text": 'Lorem autem veritatis.',
         "start_time": "0.44",
         "end_time": "3.3",
-        }
+        }]
 
 test_job_no_speaker = {
         'jobName': 'TestJob',
@@ -21,10 +35,12 @@ test_job_no_speaker = {
                 'transcripts': [
                     {'transcript': 'Lorem consequatur nesciunt...'},
                     ],
-                'items': [no_speaker_segment]
+                'items': no_speaker_segment,
                 }
         }
 
+
+### TESTS ###
 
 def test_add_speaker_creates_speaker_object():
     """Amazon add_speaker creates a speaker object"""
@@ -35,10 +51,19 @@ def test_add_speaker_creates_speaker_object():
 
 def test_add_marker_creates_marker_object_with_speaker():
     """Amazon add_marker creates a marker object"""
-    marker = amazon.add_marker(segment, has_speakers=True)
+    marker = amazon.add_marker(speaker_segment['segments'][0], has_speakers=True)
     assert marker.speaker == amazon.add_speaker(0)
     assert marker.start_time == 0.44
     assert marker.end_time == 3.3
+
+
+def test_add_marker_creates_marker_object_with_no_speaker():
+    """Amazon add_marker creates a marker object"""
+    marker = amazon.add_marker(no_speaker_segment)
+    assert marker.speaker == None
+    assert marker.start_time == 0.44
+    assert marker.end_time == 3.3
+
 
 def test_from_amazon_uri_gets_job_json_from_uri(requests_mock, mocker):
     '''Given a uri, fetch JSON'''
