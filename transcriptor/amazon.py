@@ -16,22 +16,22 @@ def add_speaker(speaker_index: int) -> Speaker:
             )
 
 
-def add_marker(segment: typing.Sequence, has_speakers:bool=False) -> Marker:
+def add_marker(segment: typing.Sequence, *, has_speakers:bool=False) -> Marker:
 
-    if speaker:
+    if has_speakers:
         speaker_index = int(segment['speaker_label'].split('_')[-1])
 
         return Marker(
                 speaker=add_speaker(speaker_index=speaker_index),
-                start_time = segment['start_time'],
-                end_time = segment['end_time'],
+                start_time = float(segment['start_time']),
+                end_time = float(segment['end_time']),
         )
 
     else:
 
         return Marker(
-                start_time = items_segment[0]['start_time'],
-                end_time = items_segment[-1],
+                start_time = float(segment[0]['start_time']),
+                end_time = float(segment[-1]['end_time']),
                 )
 
     return Marker
