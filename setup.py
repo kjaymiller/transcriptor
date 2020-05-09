@@ -9,6 +9,7 @@ setup(
         version='2020.5.3',
         description='A wrapper for transcription results.',
         long_description=long_description,
+        long_description_content_type='text/markdown',
         url='https://github.com/kjaymiller/transcriptor',
         author='Jay Miller',
         license='MIT',
