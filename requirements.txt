@@ -9,6 +9,7 @@ boto3==1.13.3             # via -r requirements.in
 botocore==1.16.3          # via boto3, s3transfer
 certifi==2020.4.5.1       # via requests
 chardet==3.0.4            # via requests
+coverage==5.1             # via pytest-cov
 docutils==0.15.2          # via botocore
 idna==2.9                 # via requests
 jmespath==0.9.5           # via boto3, botocore
@@ -17,8 +18,9 @@ packaging==20.3           # via pytest
 pluggy==0.13.1            # via pytest
 py==1.8.1                 # via pytest
 pyparsing==2.4.7          # via packaging
+pytest-cov==2.8.1         # via -r requirements.in
 pytest-mock==3.1.0        # via -r requirements.in
-pytest==5.4.1             # via -r requirements.in, pytest-mock
+pytest==5.4.1             # via -r requirements.in, pytest-cov, pytest-mock
 python-dateutil==2.8.1    # via botocore
 requests-mock==1.8.0      # via -r requirements.in
 requests==2.23.0          # via -r requirements.in, requests-mock

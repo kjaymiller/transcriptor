@@ -4,3 +4,4 @@ pytest
 boto3
 pytest-mock
 requests-mock
+pytest-cov

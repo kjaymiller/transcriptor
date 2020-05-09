@@ -34,16 +34,14 @@ def add_marker(segment: typing.Sequence, *, has_speakers:bool=False) -> Marker:
                 end_time = float(segment[-1]['end_time']),
                 )
 
-    return Marker
 
-
-def from_amazon_job(job_name: str) -> Job:
+def from_job(job_name: str) -> Job:
     """Create a Job Object based on the TranscriptiobJobName"""
     job = transcribe.get_transcription_job(TranscriptionJobName=job_name)
-    return from_amazon_uri(job['Transcript']['TranscriptFileUri'])
+    return from_uri(job['Transcript']['TranscriptFileUri'])
 
 
-def from_amazon_uri(uri) -> Job:
+def from_uri(uri) -> Job:
     """Create a Job Object based on the TranscriptFileUri"""
     response = requests.get(uri)
     response.raise_for_status()
