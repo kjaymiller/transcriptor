@@ -46,8 +46,6 @@ def from_uri(uri) -> Job:
     response = requests.get(uri)
     response.raise_for_status()
     transcription = response.json()
-    name = transcription['jobName']
-    base_text = transcription['results']['transcripts'][0]['transcript']
 
     if 'speaker_labels' in transcription['results']:
         labels = transcription['results']['speaker_labels']
@@ -63,8 +61,9 @@ def from_uri(uri) -> Job:
         markers = [add_marker(x) for x in items_segments]
 
     return Job(
-            base_text=base_text,
-            name=name,
+            base_text = transcription['results']['transcripts'][0]['transcript'],
+            transcription_items = transcription['results']['items'],
+            name = transcription['jobName'],
             transcription=transcription,
             speakers = speakers,
             markers = markers,
