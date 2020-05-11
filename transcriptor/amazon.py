@@ -45,6 +45,7 @@ def add_alternative(segment:typing.Dict) -> Alternative:
             end_time = float(segment['end_time']),
             )
 
+
 def from_job(job_name: str) -> Job:
     """Create a Job Object based on the TranscriptiobJobName"""
     job = transcribe.get_transcription_job(TranscriptionJobName=job_name)
