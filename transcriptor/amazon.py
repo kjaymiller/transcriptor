@@ -1,6 +1,7 @@
 from transcriptor.job import Job
 from transcriptor.markers import Marker
 from transcriptor.speakers import Speaker
+from transcriptor.alternatives import Alternative
 
 import boto3
 import more_itertools
@@ -35,6 +36,15 @@ def add_marker(segment: typing.Sequence, *, has_speakers:bool=False) -> Marker:
                 )
 
 
+def add_alternative(segment:typing.Dict) -> Alternative:
+
+    return Alternative(
+            content = segment['alternatives'][0]['content'],
+            confidence = float(segment['alternatives'][0]['confidence']),
+            start_time = float(segment['start_time']),
+            end_time = float(segment['end_time']),
+            )
+
 def from_job(job_name: str) -> Job:
     """Create a Job Object based on the TranscriptiobJobName"""
     job = transcribe.get_transcription_job(TranscriptionJobName=job_name)
@@ -59,6 +69,10 @@ def from_uri(uri) -> Job:
             segments, lambda x:x['type']=='punctuation',
         )
         markers = [add_marker(x) for x in items_segments]
+
+    transcription_items = [
+            add_alternative(x) for x in transcription['results']['items']
+            ]
 
     return Job(
             base_text = transcription['results']['transcripts'][0]['transcript'],

@@ -21,13 +21,20 @@ speaker_segment = {
 }
 
 no_speaker_segment = [
-    {"text": "Lorem autem veritatis.", "start_time": "0.44", "end_time": "3.3",}
-]
+        {
+            "alternatives": [{
+                    "confidence" : 1.0,
+                    "content" : "Lorem autem veritatis.",
+                    }],
+                    "start_time": "0.44",
+                    "end_time": "3.3",
+            }
+        ]
 
 test_job_no_speaker = {
     "jobName": "TestJob",
     "results": {
-        "transcripts": [{"transcript": "Lorem consequatur nesciunt..."},],
+        "transcripts": [{"transcript": "Lorem consequatur nesciunt..."}],
         "items": no_speaker_segment,
     },
 }
@@ -52,6 +59,16 @@ def test_add_marker_creates_marker_object_with_speaker():
     assert marker.speaker == amazon.add_speaker(0)
     assert marker.start_time == 0.44
     assert marker.end_time == 3.3
+
+
+def test_add_alternative_creates_alternative_object():
+    """Amazon add_alternative create an alternative object"""
+    alternative = amazon.add_alternative(no_speaker_segment[0]) # no speaker segment is results['items']
+    assert alternative.confidence == 1.0
+    assert alternative.start_time == 0.44
+    assert alternative.end_time == 3.3
+    assert alternative.content == 'Lorem autem veritatis.'
+
 
 
 def test_add_marker_creates_marker_object_with_no_speaker():

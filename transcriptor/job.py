@@ -10,7 +10,7 @@ class Job:
             base_text: str,
             markers: typing.List,
             transcription: typing.Dict,
-            transcription_itesm: typing.List,
+            transcription_items: typing.List,
             speakers: typing.List,
             ):
 
@@ -22,5 +22,4 @@ class Job:
         self.transcription_items = transcription_items
 
     def text_at_marker(self, marker_index: int) -> str:
-        for text in transcription_items:
-            pass
+        return self.markers[transcription_items]
