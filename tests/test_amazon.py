@@ -28,6 +28,7 @@ no_speaker_segment = [
                     }],
                     "start_time": "0.44",
                     "end_time": "3.3",
+                    "type": "pronunciation",
             }
         ]
 

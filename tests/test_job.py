@@ -24,26 +24,27 @@ test_job_no_speakers = Job(
                 start_time=0.1,
                 end_time=1.0,
                 confidence=1.0,
+                _type="pronunciation"
             ),
             Alternative(
                 content='maiores',
                 start_time=1.1,
                 end_time=2.0,
                 confidence=1.0,
+                _type="pronunciation"
             ),
             Alternative(
                 content='ducimus',
                 start_time=2.1,
                 end_time=3.0,
                 confidence=1.0,
+                _type="pronunciation"
             ),
             Alternative(
                 content='.',
-                start_time=3.1,
-                end_time=4.0,
-                confidence=1.0,
+                confidence=0.0,
+                _type="punctuation"
             ),
-
         ]
     )
 
@@ -51,5 +52,13 @@ test_job_no_speakers = Job(
 def test_text_at_marker():
     """Return all text between the start/stop time of markers"""
 
-    assert test_job_no_speakers.text_at_marker(0) == 'Ipsum'
-    assert test_job_no_speakers.text_at_marker(1) == 'maiores ducimus'
+    assert test_job_no_speakers.text_at_marker(0) == '0.0:\nIpsum'
+    assert test_job_no_speakers.text_at_marker(1) == '1.1:\nmaiores ducimus .'
+
+def test_text_at_marker_new_separator():
+    """Return all text between the start/stop time of markers"""
+
+    assert test_job_no_speakers.text_at_marker(0, separator=': ') == '0.0: Ipsum'
+
+def test_job_as_text():
+    assert test_job_no_speakers.as_text() == '0.0:\nIpsum\n\n1.1:\nmaiores ducimus .'

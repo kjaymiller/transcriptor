@@ -36,14 +36,14 @@ def add_marker(segment: typing.Sequence, *, has_speakers:bool=False) -> Marker:
                 )
 
 
-def add_alternative(segment:typing.Dict) -> Alternative:
-
-    return Alternative(
-            content = segment['alternatives'][0]['content'],
-            confidence = float(segment['alternatives'][0]['confidence']),
-            start_time = float(segment['start_time']),
-            end_time = float(segment['end_time']),
-            )
+def add_alternative(segment:typing.Dict, start_time=0.0, end_time=0.0) -> Alternative:
+        return Alternative(
+                content = segment['alternatives'][0]['content'],
+                _type = segment['type'],
+                confidence = float(segment['alternatives'][0]['confidence']),
+                start_time = float(segment.get('start_time', start_time)),
+                end_time = float(segment.get('end_time', end_time)),
+                )
 
 
 def from_job(job_name: str) -> Job:
@@ -71,9 +71,19 @@ def from_uri(uri) -> Job:
         )
         markers = [add_marker(x) for x in items_segments]
 
-    transcription_items = [
-            add_alternative(x) for x in transcription['results']['items']
-            ]
+    transcription_items = []
+    start_time = 0.0
+    end_time = 0.0
+
+    for x in transcription['results']['items']:
+        alternative = add_alternative(
+            x,
+            start_time=start_time,
+            end_time=end_time,
+            )
+        transcription_items.append(alternative)
+        start_time = alternative.start_time
+        end_time = alternative.end_time
 
     return Job(
             base_text = transcription['results']['transcripts'][0]['transcript'],

@@ -5,5 +5,6 @@ import typing
 class Alternative:
     content: str
     confidence: float
-    start_time: float
-    end_time: float
+    _type: str
+    start_time: float = None
+    end_time: float = None
