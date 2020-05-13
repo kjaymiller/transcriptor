@@ -17,22 +17,29 @@ def add_speaker(speaker_index: int) -> Speaker:
             )
 
 
-def add_marker(segment: typing.Sequence, *, has_speakers:bool=False) -> Marker:
+def add_marker(
+        segment: typing.Sequence,
+        *,
+        has_speakers:bool=False,
+        start_time=0.0,
+        end_time=0.0,
+        ) -> Marker:
 
     if has_speakers:
         speaker_index = int(segment['speaker_label'].split('_')[-1])
 
         return Marker(
                 speaker=add_speaker(speaker_index=speaker_index),
-                start_time = float(segment['start_time']),
-                end_time = float(segment['end_time']),
+                start_time = float(segment.get('start_time')),
+                end_time = float(segment.get('end_time', end_time)),
         )
+
 
     else:
 
         return Marker(
                 start_time = float(segment[0]['start_time']),
-                end_time = float(segment[-1]['end_time']),
+                end_time = float(segment[-2]['end_time']),
                 )
 
 
@@ -56,8 +63,10 @@ def from_uri(uri) -> Job:
     """Create a Job Object based on the TranscriptFileUri"""
     response = requests.get(uri)
     response.raise_for_status()
-    transcription = response.json()
 
+    return from_json(response.json())
+
+def from_json(transcription) -> Job:
     if 'speaker_labels' in transcription['results']:
         labels = transcription['results']['speaker_labels']
         speakers = [add_speaker(x) for x in range(labels['speakers'])]
@@ -67,27 +76,39 @@ def from_uri(uri) -> Job:
         segments = transcription['results']['items']
         speakers = []
         items_segments = more_itertools.split_when(
-            segments, lambda x:x['type']=='punctuation',
+            segments, lambda x,y: x['alternatives'][0]['content'] in ['.', '?', '!'],
         )
-        markers = [add_marker(x) for x in items_segments]
+        markers = []
+        start_time = 0.0
+        end_time = 0.0
 
-    transcription_items = []
+        for marker_object in items_segments:
+            marker = add_marker(
+                    marker_object,
+                    start_time=start_time,
+                    end_time=end_time,
+            )
+            markers.append(marker)
+            start_time = marker.start_time
+            end_time = marker.end_time
+
+    alternatives = []
     start_time = 0.0
     end_time = 0.0
 
-    for x in transcription['results']['items']:
+    for alternative_object in transcription['results']['items']:
         alternative = add_alternative(
-            x,
+            alternative_object,
             start_time=start_time,
             end_time=end_time,
             )
-        transcription_items.append(alternative)
+        alternatives.append(alternative)
         start_time = alternative.start_time
         end_time = alternative.end_time
 
     return Job(
             base_text = transcription['results']['transcripts'][0]['transcript'],
-            transcription_items = transcription['results']['items'],
+            alternatives = alternatives,
             name = transcription['jobName'],
             transcription=transcription,
             speakers = speakers,

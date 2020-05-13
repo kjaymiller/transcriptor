@@ -31,11 +31,9 @@ class Job:
         for item in self.alternatives:
             if marker_alternatives and item._type == 'punctuation':
                 marker_alternatives.append(item.content)
-                continue
 
-            if item.start_time >= marker.start_time and item.end_time <= marker.end_time:
+            elif item.start_time >= marker.start_time and item.end_time <= marker.end_time:
                 marker_alternatives.append(item.content)
-                continue
 
             elif item.end_time > marker.end_time:
                 logging.warning(item.__dict__)
