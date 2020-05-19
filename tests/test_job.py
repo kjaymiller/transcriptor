@@ -4,20 +4,21 @@ from transcriptor.markers import Marker
 from transcriptor.speakers import Speaker
 import pytest
 
-speaker = Speaker(base_name='spk_0', name='Jay')
+speaker_1 = Speaker(base_name='spk_0', name='Jay')
+speaker_2 = Speaker(base_name='spk_1', name=None)
 
 test_job = Job(
         name='Test Job',
         base_text= 'Ipsum maiores ducimus',
-        speakers=[speaker],
+        speakers=[speaker_1, speaker_2],
         markers=[
             Marker(
-                speaker=speaker,
+                speaker=speaker_1,
                 start_time=0.0,
                 end_time=1.0,
                 ),
             Marker(
-                speaker=speaker,
+                speaker=speaker_2,
                 start_time=1.1,
                 end_time=3.0,
                 ),
@@ -63,7 +64,7 @@ def test_text_at_marker():
 
 
 def test_job_as_text():
-    assert test_job.as_text() == 'Jay 0.0:\n\nIpsum\n\nJay 1.1:\n\nmaiores ducimus.'
+    assert test_job.as_text() == 'Jay 0.0:\n\nIpsum\n\nspk_1 1.1:\n\nmaiores ducimus.'
 
 
 def test_job_no_speakers():
@@ -71,9 +72,6 @@ def test_job_no_speakers():
 
 
 def test_job_as_text_picks_up_changes_to_speaker():
-    test_job_alt = test_job
-    assert test_job_alt.as_text() == 'Jay 0.0:\n\nIpsum\n\nJay 1.1:\n\nmaiores ducimus.'
-
-    test_job_alt.speakers[0].name == 'Alice'
-    assert test_job.speakers[0].name == 'Jay'
-    assert test_job_alt.as_text() == 'Alice 0.0:\n\nIpsum\n\nAlice 1.1:\n\nmaiores ducimus.'
+    test_job.speakers[1].name = 'Alice'
+    assert test_job.speakers[1].name == 'Alice'
+    assert test_job.as_text() == 'Jay 0.0:\n\nIpsum\n\nAlice 1.1:\n\nmaiores ducimus.'
