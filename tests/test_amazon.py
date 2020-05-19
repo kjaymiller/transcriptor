@@ -24,10 +24,33 @@ no_speaker_segment = [
         {
             "alternatives": [{
                     "confidence" : 1.0,
-                    "content" : "Lorem autem veritatis.",
+                    "content" : "Lorem",
                     }],
                     "start_time": "0.44",
                     "end_time": "3.3",
+                    "type": "pronunciation",
+            },
+        {
+            "alternatives": [{
+                    "confidence" : 0.0,
+                    "content" : ",",
+                    }],
+                    "type": "punctuation",
+            },
+        {
+            "alternatives": [{
+                    "confidence" : 1.0,
+                    "content" : "ipsum",
+                    }],
+                    "start_time": "0.44",
+                    "end_time": "3.3",
+                    "type": "pronunciation",
+            },
+        {
+            "alternatives": [{
+                    "confidence" : 0.0,
+                    "content" : "."
+                    }],
                     "type": "pronunciation",
             }
         ]
@@ -51,8 +74,6 @@ def test_add_speaker_creates_speaker_object():
     """Amazon add_speaker creates a speaker object"""
     speaker = amazon.add_speaker(0)
     assert speaker.base_name == "spk_0"
-    assert speaker.speaker_index == 0
-
 
 def test_add_marker_creates_marker_object_with_speaker():
     """Amazon add_marker creates a marker object"""
@@ -68,28 +89,11 @@ def test_add_alternative_creates_alternative_object():
     assert alternative.confidence == 1.0
     assert alternative.start_time == 0.44
     assert alternative.end_time == 3.3
-    assert alternative.content == 'Lorem autem veritatis.'
+    assert alternative.content == 'Lorem'
 
 
-
-def test_add_marker_creates_marker_object_with_no_speaker():
-    """Amazon add_marker creates a marker object"""
-    marker = amazon.add_marker(no_speaker_segment)
-    assert marker.speaker == None
-    assert marker.start_time == 0.44
-    assert marker.end_time == 3.3
-
-
-def test_amazon_from_uri_gets_job_json_from_uri(requests_mock, mocker):
-    """Given a uri, fetch JSON"""
-
-    requests_mock.get(
-        "https://example.com/example_job.json", json=test_job_no_speaker,
-    )
-    mocker.patch("transcriptor.amazon.Job")
-    job = amazon.from_uri("https://example.com/example_job.json")
-    amazon.Job.assert_called()
-
+def test_add_alternatives_adds_custom_start_and_end_times():
+    """Since punctuation """
 
 def test_from_amazon_json(requests_mock, mocker):
     """Given a uri, fetch JSON"""

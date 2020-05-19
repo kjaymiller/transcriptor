@@ -11,8 +11,8 @@ import typing
 transcribe = boto3.client('transcribe')
 
 def add_speaker(speaker_index: int) -> Speaker:
+    """Create a speaker object from one of the labels in results['speaker_labels']"""
     return Speaker(
-            speaker_index=speaker_index,
             base_name=f'spk_{speaker_index}',
             )
 
@@ -24,6 +24,8 @@ def add_marker(
         start_time=0.0,
         end_time=0.0,
         ) -> Marker:
+    """Create a Marker object using the speaker time_stamps OR the defined
+    item_segments if speakers is False"""
 
     if has_speakers:
         speaker_index = int(segment['speaker_label'].split('_')[-1])
@@ -37,9 +39,17 @@ def add_marker(
 
     else:
 
+        start_time = float(segment[0]['start_time'])
+
+        if len(segment) >= 2:
+            end_time = float(segment[-2]['end_time'])
+
+        else:
+            end_time = float(segment[-1]['end_time'])
+
         return Marker(
-                start_time = float(segment[0]['start_time']),
-                end_time = float(segment[-2]['end_time']),
+                start_time = start_time,
+                end_time = end_time,
                 )
 
 
@@ -67,6 +77,7 @@ def from_uri(uri) -> Job:
     return from_json(response.json())
 
 def from_json(transcription) -> Job:
+    """Create a Job Object when given an Amazon JSON Object"""
     if 'speaker_labels' in transcription['results']:
         labels = transcription['results']['speaker_labels']
         speakers = [add_speaker(x) for x in range(labels['speakers'])]

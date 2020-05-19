@@ -6,13 +6,18 @@ with open("README.md") as filename:
 
 setup(
         name='transcriptor',
-        version='2020.5.8',
+        version='2020.5.11',
         description='A wrapper for transcription results.',
         long_description=long_description,
         long_description_content_type='text/markdown',
         url='https://github.com/kjaymiller/transcriptor',
         author='Jay Miller',
+        author_email='kjaymiller@gmail.com',
         license='MIT',
         packages=find_packages(),
+        install_requires=[
+            'more-itertools',
+            'requests',
+            ],
         zip_safe=False,
         )
