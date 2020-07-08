@@ -24,8 +24,9 @@ Transcriptor aims to make working with transcriptions easier.
 This and much of the work that I do is made possible by those that sponsor me
 on github. 
 
-<iframe src="https://github.com/sponsors/kjaymiller/button" title="Sponsor kjaymiller" height="35" width="107" style="border: 0;"></iframe>
-
-### Sponsors
+### Sponsors at the $20/month and higher Level
 - [Brian Douglas](https://github.com/bdougie)
 - [Anthony Shaw](https://github.com/tonybaloney)
+- [Carol Willing](https://github.com/willingc)
+
+Thank you to them and all of those that continue to support this project!

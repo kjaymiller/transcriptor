@@ -2,6 +2,7 @@ from transcriptor.alternatives import Alternative
 from transcriptor.speakers import Speaker
 from transcriptor.markers import Marker
 
+import time
 import logging
 import typing
 import more_itertools
@@ -20,9 +21,25 @@ class Job:
 
         self.name = name
         self.base_text = base_text # default transcription as text from rendering service
-        self.markers = markers
-        self.transcription = transcription # original transcription object pre-processed
         self.speakers = speakers
+        self.markers = []
+        for marker in markers:
+            speaker = None
+            if marker['speaker']:
+                for x, s in enumerate(self.speakers):
+                    if s.base_name == marker['speaker']:
+                        speaker = self.speakers[x]
+                        break
+
+            m = Marker(
+                    speaker=speaker,
+                    start_time=marker['start_time'],
+                    end_time=marker['end_time'],
+                    )
+
+            self.markers.append(m)
+
+        self.transcription = transcription # original transcription object pre-processed
         self.alternatives = alternatives
 
     def get_text_at_marker(self, marker) -> str:
@@ -52,8 +69,12 @@ class Job:
         return ''.join(marker_alternatives)
 
 
-    def as_text(self, separator: str='\n\n', text_separator: str=':\n\n',
-            has_speaker: bool=True, has_timestamp: bool=True) -> str:
+    def as_text(
+            self, separator: str='\n\n', text_separator: str=':\n\n',
+            has_speaker: bool=True, has_timestamp: bool=True,
+            time_format="%H:%M:%S",
+            ) -> str:
+
         transcription_text = []
 
         for marker in self.markers:
@@ -65,7 +86,11 @@ class Job:
                 speaker = marker.speaker.label + ' '
 
             if has_timestamp:
-                start_time = marker.start_time
+                start_time = time.strftime(
+                        time_format,
+                        time.gmtime(marker.start_time,
+                            ),
+                    )
 
             transcription_text.append(
                 f'{speaker}{start_time}{text_separator}{text}',

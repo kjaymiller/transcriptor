@@ -78,9 +78,10 @@ def test_add_speaker_creates_speaker_object():
 def test_add_marker_creates_marker_object_with_speaker():
     """Amazon add_marker creates a marker object"""
     marker = amazon.add_marker(speaker_segment["segments"][0], has_speakers=True)
-    assert marker.speaker == amazon.add_speaker(0)
-    assert marker.start_time == 0.44
-    assert marker.end_time == 3.3
+    print(marker)
+    assert marker['speaker'] == 'spk_0'
+    assert marker['start_time'] == 0.44
+    assert marker['end_time'] == 3.3
 
 
 def test_add_alternative_creates_alternative_object():

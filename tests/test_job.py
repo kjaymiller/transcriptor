@@ -12,17 +12,17 @@ test_job = Job(
         base_text= 'Ipsum maiores ducimus',
         speakers=[speaker_1, speaker_2],
         markers=[
-            Marker(
-                speaker=speaker_1,
-                start_time=0.0,
-                end_time=1.0,
-                ),
-            Marker(
-                speaker=speaker_2,
-                start_time=1.1,
-                end_time=3.0,
-                ),
-            ],
+                {
+                    'speaker': 'spk_0',
+                    'start_time': 0.0,
+                    'end_time': 1.0,
+                    },
+                {
+                    'speaker': 'spk_1',
+                    'start_time': 1.1,
+                    'end_time': 3.0,
+                    }
+                ],
         transcription = None,
         alternatives = [
             Alternative(
@@ -64,14 +64,15 @@ def test_text_at_marker():
 
 
 def test_job_as_text():
-    assert test_job.as_text() == 'Jay 0.0:\n\nIpsum\n\nspk_1 1.1:\n\nmaiores ducimus.'
+    assert test_job.markers[0].speaker.name == 'Jay'
+    assert test_job.as_text() == 'Jay 00:00:00:\n\nIpsum\n\nspk_1 00:00:01:\n\nmaiores ducimus.'
 
 
 def test_job_no_speakers():
-    assert test_job.as_text(has_speaker=False) == '0.0:\n\nIpsum\n\n1.1:\n\nmaiores ducimus.'
+    assert test_job.as_text(has_speaker=False) == '00:00:00:\n\nIpsum\n\n00:00:01:\n\nmaiores ducimus.'
 
 
 def test_job_as_text_picks_up_changes_to_speaker():
     test_job.speakers[1].name = 'Alice'
     assert test_job.speakers[1].name == 'Alice'
-    assert test_job.as_text() == 'Jay 0.0:\n\nIpsum\n\nAlice 1.1:\n\nmaiores ducimus.'
+    assert test_job.as_text() == 'Jay 00:00:00:\n\nIpsum\n\nAlice 00:00:01:\n\nmaiores ducimus.'

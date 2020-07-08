@@ -23,22 +23,17 @@ def add_marker(
         has_speakers:bool=False,
         start_time=0.0,
         end_time=0.0,
-        ) -> Marker:
+        ) -> typing.Dict:
     """Create a Marker object using the speaker time_stamps OR the defined
     item_segments if speakers is False"""
 
     if has_speakers:
-        speaker_index = int(segment['speaker_label'].split('_')[-1])
-
-        return Marker(
-                speaker=add_speaker(speaker_index=speaker_index),
-                start_time = float(segment.get('start_time')),
-                end_time = float(segment.get('end_time', end_time)),
-        )
-
+        speaker = segment['speaker_label']
+        start_time = float(segment.get('start_time', start_time))
+        end_time = float(segment.get('end_time', end_time))
 
     else:
-
+        speaker = None
         start_time = float(segment[0]['start_time'])
 
         if len(segment) >= 2:
@@ -47,10 +42,11 @@ def add_marker(
         else:
             end_time = float(segment[-1]['end_time'])
 
-        return Marker(
-                start_time = start_time,
-                end_time = end_time,
-                )
+    return {
+            'speaker': speaker,
+            'start_time': start_time,
+            'end_time': end_time,
+           }
 
 
 def add_alternative(segment:typing.Dict, start_time=0.0, end_time=0.0) -> Alternative:
@@ -66,7 +62,7 @@ def add_alternative(segment:typing.Dict, start_time=0.0, end_time=0.0) -> Altern
 def from_job(job_name: str) -> Job:
     """Create a Job Object based on the TranscriptiobJobName"""
     job = transcribe.get_transcription_job(TranscriptionJobName=job_name)
-    return from_uri(job['Transcript']['TranscriptFileUri'])
+    return from_uri(job['TranscriptionJob']['Transcript']['TranscriptFileUri'])
 
 
 def from_uri(uri) -> Job:
@@ -100,8 +96,8 @@ def from_json(transcription) -> Job:
                     end_time=end_time,
             )
             markers.append(marker)
-            start_time = marker.start_time
-            end_time = marker.end_time
+            start_time = marker['start_time']
+            end_time = marker['end_time']
 
     alternatives = []
     start_time = 0.0
