@@ -7,6 +7,15 @@ import logging
 import typing
 import more_itertools
 
+def get_base_strftime(timestamp: float, time_format: str):
+    """converts float to strftime using gmtime"""
+    return time.strftime(time_format, time.gmtime(timestamp))
+
+def mil_format(number: float, separator: str) -> str:
+    """Given a Float from a timestap return the milisecond value"""
+    decimal_point = str(number).split('.')[-1]
+    return f'{separator}{decimal_point}0' # Amazon Transcribe Floats to the Hundreths Position
+
 
 class Job:
     def __init__(
@@ -68,8 +77,8 @@ class Job:
 
         return ''.join(marker_alternatives)
 
-
-    def as_text(
+    @property
+    def transcript(
             self, separator: str='\n\n', text_separator: str=':\n\n',
             has_speaker: bool=True, has_timestamp: bool=True,
             time_format="%H:%M:%S",
@@ -86,15 +95,79 @@ class Job:
                 speaker = marker.speaker.label + ' '
 
             if has_timestamp:
-                start_time = time.strftime(
-                        time_format,
-                        time.gmtime(marker.start_time,
-                            ),
-                    )
+                start_time = get_base_strftime(
+                        marker.start_time,
+                        time_format=time_format,
+                        )
 
             transcription_text.append(
                 f'{speaker}{start_time}{text_separator}{text}',
                 )
 
+        return separator.join(transcription_text)
+
+    @property
+    def srt(self, has_speaker: bool=True) -> str:
+        """Creates transcription file in srt format"""
+
+        time_format="%H:%M:%S"
+        separator: str='\n\n'
+        transcription_text = []
+
+        for index, marker in enumerate(self.markers, start=1):
+            text = self.get_text_at_marker(marker)
+            speaker = ''
+            start_time = ''
+            end_time = ''
+
+            if has_speaker and marker.speaker:
+                speaker = f'>> {marker.speaker.label}: '
+
+            start_time = get_base_strftime(
+                    marker.start_time,
+                    time_format=time_format) + mil_format(marker.start_time,
+                            separator=',')
+
+            end_time = get_base_strftime(
+                    marker.end_time,
+                    time_format=time_format) + mil_format(marker.end_time,
+                            separator=',')
+
+            transcription_text.append(
+                f'{index}\n{start_time} --> {end_time}\n{speaker}{text}',
+                )
+
+        return separator.join(transcription_text)
+
+    @property
+    def sbv(self, has_speaker: bool=True) -> str:
+        """Creates transcription file in srt format"""
+
+        time_format="%H:%M:%S"
+        separator: str='\n\n'
+        transcription_text = []
+
+        for marker in self.markers:
+            text = self.get_text_at_marker(marker)
+            speaker = ''
+            start_time = ''
+            end_time = ''
+
+            if has_speaker and marker.speaker:
+                speaker = f'>> {marker.speaker.label}: '
+
+            start_time = get_base_strftime(
+                    marker.start_time,
+                    time_format=time_format) + mil_format(marker.start_time,
+                            separator='.')
+
+            end_time = get_base_strftime(
+                    marker.end_time,
+                    time_format=time_format) + mil_format(marker.end_time,
+                            separator='.')
+
+            transcription_text.append(
+                f'{start_time},{end_time}\n{speaker}{text}',
+                )
 
         return separator.join(transcription_text)

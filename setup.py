@@ -6,7 +6,7 @@ with open("README.md") as filename:
 
 setup(
         name='transcriptor',
-        version='2020.5.14',
+        version='2020.7.1',
         description='A wrapper for transcription results.',
         long_description=long_description,
         long_description_content_type='text/markdown',
