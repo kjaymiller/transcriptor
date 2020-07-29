@@ -15,16 +15,18 @@ Transcriptor looks at transcription objects as a class.
 - Nondestructive manipulation of text and references.
 
 ## Installation
+
 Install transcriptor using pip.
 
 `pip install transcriptor`
 
 
 ## Quickstart
-Transcriptor currently does not support automated transcription upload, but it
-supports creating **READABLE** Transcription `Job` objects from their output.
 
-Importing transcription JSON Output from AWS Transcribe
+Transcriptor currently does not support automated transcription upload, but it
+supports creating **READABLE Transcription Job Object** from their output.
+
+### Importing Transcriptions from AWS Transcribe
 
 Because transcriptor is designed to wrap around AWS Transcribe if you have
 configured your environment with information for AWS, you can directly convert
@@ -33,11 +35,35 @@ AWS Transcribe jobs to Transcriptor Jobs with the `amazon.from_job()` method.
 ```python
 from transcriptor import amazon
 
-amazon.from(job="<TranscriptionJobName>")
+amazon.from_job(job="<TranscriptionJobName>")
 ```
 
 Alternatively, you can load the object via the _TranscriptFileUri_
 (`amazon.from_uri()`) or the JSON object directly (`amazon.from_json()`).
+
+A loaded Transcription Job from AWS Transcribe will give you access to `Markers`, `Speakers`
+(if included), the provided `Alternatives`. You also have the original job
+object that you can interact with.
+
+### Importing from an SubRip Subtitle (SRT)
+
+Text Transcriptions from the Web can be very unique in style, but the most
+common format is that of at srt file.
+
+You can load an srt file into transcriptor and use that to interact with the
+individual markers.
+
+```python
+from transcriptor import Job
+
+amazon.from_srt('FILENAME.srt')
+```
+
+A loaded Transcription Job from srt files will make `Markers`.
+
+These markers are given in order as a list. This gives you the ability to
+modify a single Marker or iterate your changes across a range or all of the
+Marker objects.
 
 ## Supported Services
 
