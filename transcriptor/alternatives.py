@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-import typing
+from typing import Optional
 
 @dataclass
 class Alternative:
     content: str
     confidence: float
     _type: str
-    start_time: float = None
-    end_time: float = None
+    start_time: Optional[float] = None
+    end_time: Optional[float] = None

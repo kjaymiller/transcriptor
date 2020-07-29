@@ -113,7 +113,7 @@ def from_json(transcription) -> Job:
         start_time = alternative.start_time
         end_time = alternative.end_time
 
-    return Job(
+    return Job.from_amazon(
             base_text = transcription['results']['transcripts'][0]['transcript'],
             alternatives = alternatives,
             name = transcription['jobName'],

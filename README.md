@@ -1,11 +1,13 @@
+![Transcriptor Logo](https://s3-us-west-2.amazonaws.com/kjaymiller/images/Transcriptor%20Logo%20V1.1.png)
 # Transcriptor
-
 ## A transcription service wrapper that makes it easier to work with transcriptions.
 
-Transcription services provide a cost effective way to add accessibility to
-your audio, but are often a challenge to integrate into your systems.
+Transcription services provide a cost-effective way to add accessibility to
+your audio and video, but they are often a challenge to integrate into your system.
 
-Transcriptor aims to make working with transcriptions easier.
+**Transcriptor aims to make working with transcriptions easier.**
+
+Transcriptor looks at transcription objects as a class.
 
 ### Features:
 
@@ -22,7 +24,7 @@ Transcriptor aims to make working with transcriptions easier.
 
 ## Sponsors
 This and much of the work that I do is made possible by those that sponsor me
-on github. 
+on github.
 
 ### Sponsors at the $20/month and higher Level
 - [Brian Douglas](https://github.com/bdougie)
@@ -30,3 +32,5 @@ on github.
 - [Carol Willing](https://github.com/willingc)
 
 Thank you to them and all of those that continue to support this project!
+
+[**Sponsor this Project**](https://github.com/sponsors/kjaymiller)
