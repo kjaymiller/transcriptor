@@ -14,6 +14,31 @@ Transcriptor looks at transcription objects as a class.
 - An object-oriented approach to Transcriptions, Markers, and Speakers
 - Nondestructive manipulation of text and references.
 
+## Installation
+Install transcriptor using pip.
+
+`pip install transcriptor`
+
+
+## Quickstart
+Transcriptor currently does not support automated transcription upload, but it
+supports creating **READABLE** Transcription `Job` objects from their output.
+
+Importing transcription JSON Output from AWS Transcribe
+
+Because transcriptor is designed to wrap around AWS Transcribe if you have
+configured your environment with information for AWS, you can directly convert
+AWS Transcribe jobs to Transcriptor Jobs with the `amazon.from_job()` method.
+
+```python
+from transcriptor import amazon
+
+amazon.from(job="<TranscriptionJobName>")
+```
+
+Alternatively, you can load the object via the _TranscriptFileUri_
+(`amazon.from_uri()`) or the JSON object directly (`amazon.from_json()`).
+
 ## Supported Services
 
 - Amazon Transcribe (boto3)

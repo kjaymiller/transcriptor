@@ -18,6 +18,7 @@ setup(
         install_requires=[
             'more-itertools',
             'requests',
+            'boto3',
             ],
         zip_safe=False,
         )
