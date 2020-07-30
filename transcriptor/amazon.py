@@ -1,7 +1,9 @@
-from transcriptor.job import Job
-from transcriptor.markers import Marker
-from transcriptor.speakers import Speaker
-from transcriptor.alternatives import Alternative
+from .job import Job
+from .markers import Marker
+from .speakers import Speaker
+from .alternatives import Alternative
+
+from datetime import timedelta
 
 import boto3
 import more_itertools
@@ -10,43 +12,34 @@ import typing
 
 transcribe = boto3.client('transcribe')
 
+def text_in_range(segments, start_time, end_time):
+    content = ''
+    in_range = False
+
+    for index, segment in enumerate(segments):
+        if segment['type'] == 'punctuation':
+
+            if in_range == True:
+                content += segment['alternatives'][0]['content']
+
+            else:
+                continue
+
+        elif float(segment['end_time']) <= float(end_time):
+
+            if float(segment['start_time']) >= float(start_time):
+                in_range = True
+                content += " " + segment['alternatives'][0]['content']
+
+        else:
+            return content.strip()
+
+
 def add_speaker(speaker_index: int) -> Speaker:
     """Create a speaker object from one of the labels in results['speaker_labels']"""
     return Speaker(
             base_name=f'spk_{speaker_index}',
             )
-
-
-def add_marker(
-        segment: typing.Sequence,
-        *,
-        has_speakers:bool=False,
-        start_time=0.0,
-        end_time=0.0,
-        ) -> typing.Dict:
-    """Create a Marker object using the speaker time_stamps OR the defined
-    item_segments if speakers is False"""
-
-    if has_speakers:
-        speaker = segment['speaker_label']
-        start_time = float(segment.get('start_time', start_time))
-        end_time = float(segment.get('end_time', end_time))
-
-    else:
-        speaker = None
-        start_time = float(segment[0]['start_time'])
-
-        if len(segment) >= 2:
-            end_time = float(segment[-2]['end_time'])
-
-        else:
-            end_time = float(segment[-1]['end_time'])
-
-    return {
-            'speaker': speaker,
-            'start_time': start_time,
-            'end_time': end_time,
-           }
 
 
 def add_alternative(segment:typing.Dict, start_time=0.0, end_time=0.0) -> Alternative:
@@ -72,50 +65,57 @@ def from_uri(uri) -> Job:
 
     return from_json(response.json())
 
+
 def from_json(transcription) -> Job:
     """Create a Job Object when given an Amazon JSON Object"""
+    markers = []
+    segments = transcription['results']['items']
+
     if 'speaker_labels' in transcription['results']:
         labels = transcription['results']['speaker_labels']
         speakers = [add_speaker(x) for x in range(labels['speakers'])]
-        markers = [add_marker(x, has_speakers=True) for x in labels['segments']]
+
+        for segment in labels['segments']:
+            start_time=segment['start_time']
+            end_time=segment['end_time']
+            speaker=[x for x in speakers if x.base_name == segment['speaker_label']][0]
+            content = text_in_range(
+                    segments,
+                    start_time=start_time,
+                    end_time=end_time,
+                    )
+            marker = Marker(
+                    start_time = timedelta(seconds=float(start_time)),
+                    end_time = timedelta(seconds=float(end_time)),
+                    content = content,
+                    speaker = speaker
+                    )
+            markers.append(marker)
 
     else:
-        segments = transcription['results']['items']
         speakers = []
+
         items_segments = more_itertools.split_when(
             segments, lambda x,y: x['alternatives'][0]['content'] in ['.', '?', '!'],
         )
-        markers = []
-        start_time = 0.0
-        end_time = 0.0
 
-        for marker_object in items_segments:
-            marker = add_marker(
-                    marker_object,
-                    start_time=start_time,
-                    end_time=end_time,
-            )
+        for index, item in enumerate(items_segments):
+            start_time = timedelta(seconds=float(item[0]['start_time']))
+            end_time = timedelta(seconds=float(item[-2]['end_time']))
+            content = ''
+
+            for word_block in item:
+                if word_block['type'] == 'punctuation':
+                    content += word_block['alternatives'][0]['content']
+                else:
+                    content += " " + word_block['alternatives'][0]['content']
+
+            marker = Marker(start_time=start_time, end_time=end_time,
+                    content=content)
             markers.append(marker)
-            start_time = marker['start_time']
-            end_time = marker['end_time']
-
-    alternatives = []
-    start_time = 0.0
-    end_time = 0.0
-
-    for alternative_object in transcription['results']['items']:
-        alternative = add_alternative(
-            alternative_object,
-            start_time=start_time,
-            end_time=end_time,
-            )
-        alternatives.append(alternative)
-        start_time = alternative.start_time
-        end_time = alternative.end_time
 
     return Job.from_amazon(
             base_text = transcription['results']['transcripts'][0]['transcript'],
-            alternatives = alternatives,
             name = transcription['jobName'],
             transcription=transcription,
             speakers = speakers,
