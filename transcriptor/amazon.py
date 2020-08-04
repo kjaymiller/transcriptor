@@ -42,16 +42,6 @@ def add_speaker(speaker_index: int) -> Speaker:
             )
 
 
-def add_alternative(segment:typing.Dict, start_time=0.0, end_time=0.0) -> Alternative:
-        return Alternative(
-                content = segment['alternatives'][0]['content'],
-                _type = segment['type'],
-                confidence = float(segment['alternatives'][0]['confidence']),
-                start_time = float(segment.get('start_time', start_time)),
-                end_time = float(segment.get('end_time', end_time)),
-                )
-
-
 def from_job(job_name: str) -> Job:
     """Create a Job Object based on the TranscriptiobJobName"""
     job = transcribe.get_transcription_job(TranscriptionJobName=job_name)
@@ -114,10 +104,26 @@ def from_json(transcription) -> Job:
                     content=content)
             markers.append(marker)
 
+    # add alternatives
+    alternatives = []
+    for item in segments:
+
+        if item['type'] == 'pronunciation':
+
+            for alt in item['alternatives']:
+                alternatives.append(Alternative(
+                    start_time = item['start_time'],
+                    content = alt['content'],
+                    confidence = alt['confidence'],
+                    tag = 'orignal',
+                    _type = 'pronunciation',
+                    ))
+
     return Job.from_amazon(
             base_text = transcription['results']['transcripts'][0]['transcript'],
             name = transcription['jobName'],
             transcription=transcription,
             speakers = speakers,
             markers = markers,
+            alternatives = alternatives,
             )

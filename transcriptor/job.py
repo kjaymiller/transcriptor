@@ -1,47 +1,26 @@
-from transcriptor.speakers import Speaker
-from transcriptor.markers import Marker
+from .alternatives import Alternative
+from .tools import (
+        adjust_microseconds,
+        timedelta_from_str,
+        timedelta_to_dict,
+        )
+from .speakers import Speaker
+from .markers import Marker
 
 from pathlib import Path
 from datetime import timedelta
 import re
+import string
 import time
 import logging
 import typing
 import more_itertools
 
-def adjust_microseconds(time_val: timedelta, separator='.') -> str:
-    """Take the microseconds from a timedelta and return the first three values"""
-    _, seconds = divmod(time_val.seconds, 60)
-    return str(seconds).zfill(2) + separator + str(time_val.microseconds)[:3]
-
-
-def timedelta_from_str(time_str:str) -> timedelta:
-    time_splitter = r':'
-    time_vals = re.split(time_splitter, time_str)
-    time_vals[-1] = time_vals[-1].replace(',','.') # srt time = H:M:S,Mil
-
-    return timedelta(
-            hours=int(time_vals[0]),
-            minutes=int(time_vals[1]),
-            seconds=float(time_vals[2]),
-            )
-
-def convert_time_float(time_float: float) -> typing.Dict:
-    """Convert the time float from output.json and create a dict"""
-    minutes, seconds = divmod(
-        time_float.total_seconds(), 60
-    )  # seconds will still have microseconds attached
-    hours, minutes = divmod(minutes, 60)
-
-    return {'hours': int(hours), 'minutes': int(minutes), 'seconds': seconds}
-
-def time_delta_from_float(time_float: float) -> timedelta:
-    """Convert the time float from output.json and create a timedelta"""
-    return timedelta(seconds=time_float)
 
 class Job:
     @classmethod
     def from_srt(cls, filepath: str):
+        "builds a Job object from a srt file"
         base_content = Path(filepath).read_text()
         new_job = cls()
         new_job.base_text = base_content # default transcription as text from rendering service
@@ -50,8 +29,10 @@ class Job:
         # build_markers
         marker_text = base_content.split('\n\n')
         markers = []
+        alternatives = []
 
         for index, marker in enumerate(marker_text):
+            print(marker)
             _, timestamps, content = marker.split('\n')
             start_time, end_time = timestamps.split(' --> ')
             start_time = timedelta_from_str(start_time)
@@ -69,9 +50,30 @@ class Job:
                         end_time=end_time,
                         content=content,
                         ))
-        new_job.markers = markers
-        return new_job
 
+            for word in re.split(r' |\n', content.strip()):
+                results = []
+
+                if word.strip()[-1] in string.punctuation:
+                    NewPunct = Alternative(
+                            content=word[-1],
+                            confidence=0.0,
+                            _type='punctuation',
+                            )
+                    results.append(NewPunct)
+                    word = word[:-1]
+
+                NewAlternative = Alternative(
+                        content=word,
+                        confidence=0.0,
+                        _type='pronunciation',
+                        )
+                results.insert(0, NewAlternative)
+                alternatives.extend(results)
+
+        new_job.markers = markers
+        new_job.alternatives = alternatives
+        return new_job
 
     @classmethod
     def from_amazon(
@@ -81,6 +83,7 @@ class Job:
             markers: typing.List[Marker],
             transcription: typing.Dict[typing.Any, typing.Any],
             speakers: typing.List[Speaker],
+            alternatives: typing.List[Alternative]
             ):
 
         new_job = cls()
@@ -89,6 +92,7 @@ class Job:
         new_job.speakers = speakers
         new_job.markers = markers
         new_job.transcription = transcription # original transcription object pre-processed
+        new_job.alternatives = alternatives
         return new_job
 
     @property
@@ -107,7 +111,7 @@ class Job:
                 speaker = marker.speaker.label + ' '
 
             if has_timestamp:
-                time_dict = convert_time_float(
+                time_dict = timedelta_to_dict(
                         marker.start_time,
                         )
                 hours, minutes = [str(x).zfill(2) for x in
@@ -134,13 +138,13 @@ class Job:
         for index, marker in enumerate(self.markers, start=1):
             text = marker.content
 
-            st = convert_time_float(marker.start_time)
+            st = timedelta_to_dict(marker.start_time)
             st_hours, st_minutes = [str(x).zfill(2) for x in
                     [st['hours'],st['minutes']]]
             st_seconds = adjust_microseconds(marker.start_time, separator=',')
             start_time = f"{st_hours}:{st_minutes}:{st_seconds}"
 
-            et = convert_time_float(marker.start_time)
+            et = timedelta_to_dict(marker.start_time)
             et_hours, et_minutes = [str(x).zfill(2) for x in
                     [et['hours'],et['minutes']]]
             et_seconds = adjust_microseconds(marker.end_time, separator=',')
@@ -151,3 +155,51 @@ class Job:
                 )
 
         return separator.join(transcription_text)
+
+
+    def load_edit(self, filepath: str):
+        "builds a Job object from a srt file"
+        base_content = Path(filepath).read_text()
+        self.base_text = base_content # default transcription as text from rendering service
+        self.transcription = Path(filepath) # original transcription object pre-processed
+
+        # build_markers
+        marker_text = base_content.split('\n\n')
+        markers = []
+        alternatives = []
+
+        for index, marker in enumerate(marker_text):
+            _, timestamps, content = marker.split('\n')
+            start_time, end_time = timestamps.split(' --> ')
+            start_time = timedelta_from_str(start_time)
+
+            if index != 0:
+                if start_time < (previous_entry:=markers[index-1]).end_time:
+                    raise ValueError(f'OverLappingStartTime: index - {index+1} start_time \
+{start_time=} starts before {previous_entry.end_time=}')
+
+            end_time = timedelta_from_str(end_time)
+
+            markers.append(
+                    Marker(
+                        start_time=start_time,
+                        end_time=end_time,
+                        content=content,
+                        ))
+
+            for word in re.split(r' |\n', content):
+                results = []
+
+                word = word.strip(''.join(string.punctuation))
+
+                NewAlternative = Alternative(
+                        content=word,
+                        confidence=1.0,
+                        _type='pronunciation',
+                        tag='edit',
+                        region_start_time=start_time.total_seconds()
+                        )
+
+                self.alternatives.append(NewAlternative)
+
+        self.markers = markers
