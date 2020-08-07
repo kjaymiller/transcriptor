@@ -23,8 +23,8 @@ Install transcriptor using pip.
 
 ## Quickstart
 
-Transcriptor currently does not support automated transcription upload, but it
-supports creating **READABLE Transcription Job Object** from their output.
+Transcriptor currently supports transcription upload and 
+creating a **READABLE Transcription Job Object** from their output.
 
 ### Importing Transcriptions from AWS Transcribe
 

@@ -21,8 +21,9 @@ class Job:
     @classmethod
     def from_srt(cls, filepath: str):
         "builds a Job object from a srt file"
-        base_content = Path(filepath).read_text()
         new_job = cls()
+        new_job.name = Path(base_content).name
+        base_content = Path(filepath).read_text()
         new_job.base_text = base_content # default transcription as text from rendering service
         new_job.transcription = Path(filepath) # original transcription object pre-processed
 
@@ -72,26 +73,6 @@ class Job:
                 alternatives.extend(results)
 
         new_job.markers = markers
-        new_job.alternatives = alternatives
-        return new_job
-
-    @classmethod
-    def from_amazon(
-            cls,
-            name: str,
-            base_text: str,
-            markers: typing.List[Marker],
-            transcription: typing.Dict[typing.Any, typing.Any],
-            speakers: typing.List[Speaker],
-            alternatives: typing.List[Alternative]
-            ):
-
-        new_job = cls()
-        new_job.name = name
-        new_job.base_text = base_text # default transcription as text from rendering service
-        new_job.speakers = speakers
-        new_job.markers = markers
-        new_job.transcription = transcription # original transcription object pre-processed
         new_job.alternatives = alternatives
         return new_job
 
