@@ -28,18 +28,18 @@ creating a **READABLE Transcription Job Object** from their output.
 
 ### Importing Transcriptions from AWS Transcribe
 
-Because transcriptor is designed to wrap around AWS Transcribe if you have
-configured your environment with information for AWS, you can directly convert
-AWS Transcribe jobs to Transcriptor Jobs with the `amazon.from_job()` method.
-
 ```python
-from transcriptor import amazon
+from transcriptor import amazon, AmazonJob
 
-amazon.from_job(job="<TranscriptionJobName>")
+job = AmazonJob(filepath='<filename>', bucket='<bucket_name>', )
+job.start()
+# After Some Time
+job.status() # If it says COMPLETED
+job.build()
 ```
 
 Alternatively, you can load the object via the _TranscriptFileUri_
-(`amazon.from_uri()`) or the JSON object directly (`amazon.from_json()`).
+(`AmazonJob.from_uri()`) or the JSON object directly (`AmazonJob.from_json()`).
 
 A loaded Transcription Job from AWS Transcribe will give you access to `Markers`, `Speakers`
 (if included), the provided `Alternatives`. You also have the original job
