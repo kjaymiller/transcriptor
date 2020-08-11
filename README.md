@@ -31,7 +31,7 @@ creating a **READABLE Transcription Job Object** from their output.
 ```python
 from transcriptor import amazon, AmazonJob
 
-job = AmazonJob(filepath='<filename>', bucket='<bucket_name>', )
+job = AmazonJob(filepath='<filepath>', bucket='<bucket_name>', )
 job.start()
 # After Some Time
 job.status() # If it says COMPLETED
