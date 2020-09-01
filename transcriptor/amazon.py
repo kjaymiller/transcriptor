@@ -38,7 +38,7 @@ class AmazonJob(Job):
             base_text: typing.Optional[str] = '',
             markers: typing.List[typing.Optional[Marker]] = [],
             bucket: typing.Optional[str]=None,
-            status: typing.Optional[str]=None,
+            started: typing.Optional[str]=None,
             transcription: typing.Dict[typing.Any, typing.Any] = {},
             alternatives: typing.List[Alternative] = [],
             speakers: typing.List[Speaker] = [],
@@ -60,7 +60,7 @@ class AmazonJob(Job):
 
         self.name = self.key
 
-        if status:
+        if started:
             self._status = status
 
         else:
@@ -71,8 +71,6 @@ class AmazonJob(Job):
     def status(self):
         if self._status in ['COMPLETED', 'NOT STARTED']:
             return self._status
-
-
 
         job = transcribe.get_transcription_job(TranscriptionJobName=self.key)
         status = job['TranscriptionJob']['TranscriptionJobStatus']
@@ -240,6 +238,7 @@ class AmazonJob(Job):
                 markers.append(marker)
 
         else:
+
             speakers = []
 
             items_segments = more_itertools.split_when(
