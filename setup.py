@@ -6,7 +6,7 @@ with open("README.md") as filename:
 
 setup(
         name='transcriptor',
-        version='2020.8.2',
+        version='2020.8.8',
         description='A wrapper for transcription results.',
         long_description=long_description,
         long_description_content_type='text/markdown',
@@ -19,6 +19,7 @@ setup(
             'more-itertools',
             'requests',
             'boto3',
+            'python-slugify',
             ],
         zip_safe=False,
         )

@@ -22,7 +22,7 @@ class Job:
     def from_srt(cls, filepath: str):
         "builds a Job object from a srt file"
         new_job = cls()
-        new_job.name = Path(base_content).name
+        new_job.name = Path(filepath).name
         base_content = Path(filepath).read_text()
         new_job.base_text = base_content # default transcription as text from rendering service
         new_job.transcription = Path(filepath) # original transcription object pre-processed
@@ -117,7 +117,7 @@ class Job:
         transcription_text = []
 
         for index, marker in enumerate(self.markers, start=1):
-            text = marker.content
+            text = marker.content.strip()
 
             st = timedelta_to_dict(marker.start_time)
             st_hours, st_minutes = [str(x).zfill(2) for x in
@@ -174,7 +174,7 @@ class Job:
                 word = word.strip(''.join(string.punctuation))
 
                 NewAlternative = Alternative(
-                        content=word,
+                        content=word.strip(),
                         confidence=1.0,
                         _type='pronunciation',
                         tag='edit',

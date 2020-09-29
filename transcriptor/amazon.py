@@ -2,12 +2,14 @@ from .job import Job
 from .markers import Marker
 from .speakers import Speaker
 from .alternatives import Alternative
+from .vocabulary import Vocabulary
 
 from datetime import timedelta
 from pathlib import Path
 from slugify import slugify
 
 import boto3
+import tempfile
 import more_itertools
 import requests
 import logging
@@ -17,10 +19,11 @@ import typing
 storage = boto3.client('s3')
 transcribe = boto3.client('transcribe')
 
+
 def to_key(path_name:str):
         valid_keytypes = ['.mp3', '.mp4', '.wav', '.flac']
         path = Path(path_name)
-        path_suffix =  path.suffix
+        path_suffix = path.suffix
 
         if path_suffix.lower() not in valid_keytypes:
             msg = "The file that you entered is not a valid filetype. You \
@@ -31,14 +34,37 @@ may experience issues with submitting a transcription."
         return slug_path + path_suffix
 
 
+def create_vocabulary_table(
+        vocabulary_name,
+        vocabulary: typing.List[Vocabulary],
+        bucket: str,
+        file_key: str,
+        language_code: str='en-US',
+        ):
+    table = '\n'.join([x.table for x in vocabulary]).encode('utf-8')
+    table_header = b'Phrase\tIPA\tSoundsLike\tDisplayAs\n'
+
+    with tempfile.TemporaryFile() as fp:
+        fp.write(table_header + table)
+        fp.seek(0)
+        storage.upload_fileobj(fp, Bucket=bucket, Key=file_key)
+
+    transcribe.create_vocabulary(
+            VocabularyName=vocabulary_name,
+            
+                )
+
+
+
 class AmazonJob(Job):
     def __init__(
             self,
-            filepath: typing.Optional[str] = '',
-            base_text: typing.Optional[str] = '',
+            key: typing.Optional[str] = None,
+            filepath: typing.Optional[str] = None,
+            base_text: typing.Optional[str] = None,
             markers: typing.List[typing.Optional[Marker]] = [],
             bucket: typing.Optional[str]=None,
-            started: typing.Optional[str]=None,
+            started: bool=False,
             transcription: typing.Dict[typing.Any, typing.Any] = {},
             alternatives: typing.List[Alternative] = [],
             speakers: typing.List[Speaker] = [],
@@ -55,13 +81,16 @@ class AmazonJob(Job):
             self.key = to_key(filepath)
             self.filepath = Path(filepath)
 
+        elif key:
+            self.key = to_key(key)
+
         else:
             self.key = ''
 
         self.name = self.key
 
         if started:
-            self._status = status
+            self._status = 'STARTED'
 
         else:
             self._status = 'NOT STARTED'
@@ -93,20 +122,21 @@ class AmazonJob(Job):
         speakers: int=0,
         storage=storage,
         transcribe=transcribe,
+        vocabulary: typing.Optional[str] = None,
         ):
 
         audio_file = self.upload_audio_file(self.filepath)
 
         transcribe_job_uri = f"{storage.meta.endpoint_url}/{self.bucket}/{self.key}"
-        print(transcribe_job_uri)
+        settings = {}
 
         if speakers:
-            settings = {
-                "ShowSpeakerLabels": True,
-                "MaxSpeakerLabels": speakers,
-                }
-        else:
-            settings = {}
+            settings["ShowSpeakerLabels"] = True
+            settings["MaxSpeakerLabels"] = speakers
+
+        if vocabulary:
+            settings['VocabularyName'] = vocabulary
+
 
         transcribe.start_transcription_job(
             TranscriptionJobName=self.key,
@@ -133,6 +163,7 @@ class AmazonJob(Job):
         response.raise_for_status()
 
         return AmazonJob.from_json(response.json())
+
 
     def build(self) -> Job:
         """Create a Job Object when given an Amazon JSON Object"""
@@ -246,6 +277,7 @@ class AmazonJob(Job):
             )
 
             for index, item in enumerate(items_segments):
+                
                 start_time = timedelta(seconds=float(item[0]['start_time']))
                 end_time = timedelta(seconds=float(item[-2]['end_time']))
                 content = ''
@@ -284,6 +316,36 @@ class AmazonJob(Job):
                 alternatives = alternatives,
                 )
 
+    @staticmethod
+    def from_transcription_jobs(*,
+        status: typing.Optional[str]='COMPLETED',
+        contains: typing.Optional[str]=None,
+        next_token: typing.Optional[str]=None,
+        max_results: typing.Optional[int]=None,
+        ):
+        """Get a list of transcription jobs and generate a job object for each one"""
+
+        kwargs = {}
+        if status:
+            kwargs['Status'] = status.upper()
+
+        if contains:
+            kwargs['JobNameContains'] = contains
+
+        if next_token:
+            kwargs['NextToken'] = next_token
+
+        if max_results:
+            kwargs['MaxResults'] = max_results
+
+        for job in transcribe.list_transcription_jobs(**kwargs)['TranscriptionJobSummaries']:
+            try:
+                yield AmazonJob.from_job(job['TranscriptionJobName'])
+
+            except:
+                logging.critical(f'An error has occured generating {job}')
+                
+
 ## Download Jobs
 def text_in_range(segments, start_time, end_time):
     content = ''
@@ -313,3 +375,5 @@ def add_speaker(speaker_index: int) -> Speaker:
     return Speaker(
             base_name=f'spk_{speaker_index}',
             )
+
+
