@@ -8,18 +8,13 @@ class Alternative:
     confidence: float
     _type: str
     tag: typing.Optional[str] = None
-    start_time: typing.Optional[str] = None
-    region_start_time: typing.Optional[str] = None
+    start_time: typing.Optional[float]
+    end_time: typing.Opriontal[float]
+    # regional times for loading from text
+    regional_start_time: typing.Optional[float]=None 
+    regional_end_time: typing.Optional[float]=None
 
+def gen_alternatives(alternatives):
+    for alternative in alternatives:
+        yield Alternative(**kwargs)
 
-    def find_alternates(self, job):
-        """Checks for for marker in job where the alternative start_time
-        exists. And returns all alternatives in the job with the tag edit
-        belonging to that marker"""
-
-        start_time = timedelta(seconds=float(self.start_time))
-
-        for i, marker in enumerate(job.markers):
-
-            if marker.start_time >= start_time:
-                return job.markers[i-1]

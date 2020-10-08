@@ -1,8 +1,6 @@
 from .job import Job
-from .markers import Marker
-from .speakers import Speaker
-from .alternatives import Alternative
-from .vocabulary import Vocabulary
+from .markers import Marker, gen_markers
+from .alternatives import Alternative, gen_alternatives
 from .helpers import text_in_range
 
 from datetime import timedelta
@@ -11,7 +9,6 @@ from slugify import slugify
 
 import boto3
 import dataclasses
-import tempfile
 import more_itertools
 import httpx
 import logging
@@ -61,10 +58,11 @@ class AmazonEnv():
         """
         return storage.upload_file(str(self.audio_file), Bucket=self.bucket, Key=self.key)
 
+
     def start_transcription(
         self,
+        *,
         vocabulary: typing.Optional[str]=None,
-        language: str = "en-US",
         speaker_count: int = 0,
     ):
         """Optionally upload the file and start the transcription job.
@@ -200,114 +198,42 @@ class AmazonEnv():
         return new_job
 
     @classmethod
-    def from_json(cls, transcription) -> Job:
+    def from_json(cls, json_file) -> Job:
         """Create a Job Object when given an Amazon JSON Object"""
-        markers = []
-        segments = transcription["results"]["items"]
 
-        if "speaker_labels" in transcription["results"]:
-            labels = transcription["results"]["speaker_labels"]
-            speakers = [Speaker(base_name=f"spk_{speaker_index}") for x in range(labels["speakers"])]
+        results = json_file['results']
 
-            for segment in labels["segments"]:
-                start_time = segment["start_time"]
-                end_time = segment["end_time"]
-                speaker = [
-                    x for x in speakers if x.base_name == segment["speaker_label"]
-                ][0]
-                content = text_in_range(
-                    segments,
-                    start_time=start_time,
-                    end_time=end_time,
-                )
-                marker = Marker(
-                    start_time=timedelta(seconds=float(start_time)),
-                    end_time=timedelta(seconds=float(end_time)),
-                    content=content,
-                    speaker=speaker,
-                )
-                markers.append(marker)
-
+        if "speaker_labels" in results:
+            labels = json_file["results"]["speaker_labels"]
+            segments = labels["segments"]:
+            
         else:
-
-            speakers = []
-
-            items_segments = more_itertools.split_when(
-                segments,
-                lambda x, y: x["alternatives"][0]["content"] in [".", "?", "!"],
+            segment_content = more_itertools.split_when(
+                json_file['results']['items'],
+                lambda x: x['type'] == "pronunciation"
             )
+            segments=[]
 
-            for index, item in enumerate(items_segments):
+            for segment in segment_content:
+                segments.append({
+                    'start_time': float(item[0]["start_time"]),
+                    'end_time': float(item[-1]["end_time"]),
+                    'speaker': None,
+                    })
 
-                start_time = timedelta(seconds=float(item[0]["start_time"]))
-                end_time = timedelta(seconds=float(item[-2]["end_time"]))
-                content = ""
-
-                for word_block in item:
-                    if word_block["type"] == "punctuation":
-                        content += word_block["alternatives"][0]["content"]
-                    else:
-                        content += " " + word_block["alternatives"][0]["content"]
-
-                marker = Marker(
-                    start_time=start_time, end_time=end_time, content=content
-                )
-                markers.append(marker)
-
-        # add alternatives
-        alternatives = []
-        for item in segments:
-
-            if item["type"] == "pronunciation":
-
-                for alt in item["alternatives"]:
-                    alternatives.append(
-                        Alternative(
-                            start_time=item["start_time"],
-                            content=alt["content"],
-                            confidence=alt["confidence"],
-                            tag="orignal",
-                            _type="pronunciation",
-                        )
-                    )
-
-        return cls(
-            base_text=transcription["results"]["transcripts"][0]["transcript"],
-            key=transcription["jobName"],
-            transcription=transcription,
+        return Job(
+            base_text=results["transcripts"][0]["transcript"],
+            key=json_file["jobName"],
+            transcription=json_file,
             speakers=speakers,
-            markers=markers,
-            alternatives=alternatives,
+            markers=gen_markers(segments),
+            alternatives=gen_alternatives(results['items']),
         )
 
-    @staticmethod
-    def from_transcription_jobs(
-        *,
-        status: typing.Optional[str] = "COMPLETED",
-        contains: typing.Optional[str] = None,
-        next_token: typing.Optional[str] = None,
-        max_results: typing.Optional[int] = None,
-    ):
-        """Get a list of transcription jobs and generate a job object for each one"""
 
-        kwargs = {}
-        if status:
-            kwargs["Status"] = status.upper()
+def from_transcription_jobs(**kwargs):
+        """Get a list of transcription jobs and generate a job object for each one
+        """
 
-        if contains:
-            kwargs["JobNameContains"] = contains
-
-        if next_token:
-            kwargs["NextToken"] = next_token
-
-        if max_results:
-            kwargs["MaxResults"] = max_results
-
-        for job in transcribe.list_transcription_jobs(**kwargs)[
-            "TranscriptionJobSummaries"
-        ]:
-            try:
-                yield AmazonJob.from_job(job["TranscriptionJobName"])
-
-            except:
-                logging.critical(f"An error has occured generating {job}")
+        for job in transcribe.list_transcription_jobs(**kwargs)["TranscriptionJobSummaries"]:
+            yield AmazonEnv.from_job(job["TranscriptionJobName"])
