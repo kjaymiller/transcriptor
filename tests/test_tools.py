@@ -25,3 +25,6 @@ def test_timedelta_to_dict():
     assert a['hours'] == 1
     assert a['minutes'] == 1
     assert str(a['seconds'])[:5] == '1.123' #floats are hard
+
+def test_minutes_endtime_adds_a_minute():
+    pass  
