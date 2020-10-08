@@ -3,6 +3,7 @@ from .markers import Marker
 from .speakers import Speaker
 from .alternatives import Alternative
 from .vocabulary import Vocabulary
+from .helpers import text_in_range
 
 from datetime import timedelta
 from pathlib import Path
@@ -310,29 +311,3 @@ class AmazonEnv():
 
             except:
                 logging.critical(f"An error has occured generating {job}")
-
-
-## Download Jobs
-def text_in_range(segments, start_time, end_time):
-    content = ""
-    in_range = False
-
-    for index, segment in enumerate(segments):
-        if segment["type"] == "punctuation":
-
-            if in_range == True:
-                content += segment["alternatives"][0]["content"]
-
-            else:
-                continue
-
-        elif float(segment["end_time"]) <= float(end_time):
-
-            if float(segment["start_time"]) >= float(start_time):
-                in_range = True
-                content += " " + segment["alternatives"][0]["content"]
-
-        else:
-            return content.strip()
-
-

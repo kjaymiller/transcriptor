@@ -1,7 +1,9 @@
 more-itertools
-requests
+httpx
 pytest
 boto3
 pytest-mock
 requests-mock
 pytest-cov
+slugify
+
