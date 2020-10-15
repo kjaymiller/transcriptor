@@ -1,14 +1,12 @@
 from transcriptor.speakers import Speaker
-from typing import Optional, List
 from dataclasses import dataclass
+
+import typing
 
 @dataclass
 class Marker:
-    speaker: Speaker= None
+    """Content should only exist when there are no segments"""
+    speaker: typing.Optional[Speaker]= None
     start_time: float=0.0
     end_time: float=0.0
-
-def gen_markers(segments: List):
-    for segment in segments:
-        yield Marker(**segment)
-
+    content: typing.Optional[str] = None

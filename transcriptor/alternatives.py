@@ -7,10 +7,10 @@ class Alternative:
     content: str
     confidence: float
     _type: str
-    tag: typing.Optional[str] = None
-    start_time: typing.Optional[float]
-    end_time: typing.Opriontal[float]
+    start_time: typing.Optional[float] = 0.0 
+    end_time: typing.Optional[float] = 0.0
     # regional times for loading from text
+    tag: typing.Optional[str] = None
     regional_start_time: typing.Optional[float]=None 
     regional_end_time: typing.Optional[float]=None
 

@@ -27,14 +27,12 @@ def text_in_range(segments, start_time, end_time):
     segment_range = "" 
     for segment in segments:
         # coming from JSON. segment timestamps will be strings
-        if float(segment['end_time']) < start_time:
+        if float(segment.end_time) < start_time:
             continue
 
-        if float(segment['start_time']) <= end_time:
+        if float(segment.start_time) <= end_time:
             # get the content with the highest confidence score 
-            content = sorted(
-                    segment['alternatives'], key=lambda x:x["confidence"], reverse=True
-                    )[0]['content']
+            content = content
 
             if segment['type'] == "pronunciation":
                 content = f" {content}"

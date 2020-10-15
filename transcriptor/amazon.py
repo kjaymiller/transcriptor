@@ -1,7 +1,8 @@
 from .job import Job
-from .markers import Marker, gen_markers
-from .alternatives import Alternative, gen_alternatives
+from .markers import Marker 
+from .alternatives import Alternative
 from .helpers import text_in_range
+from .speakers import Speaker
 
 from datetime import timedelta
 from pathlib import Path
@@ -34,9 +35,6 @@ class AmazonEnv():
         if bucket:
             self.bucket = bucket
 
-        else:
-            self.bucket = os.environ.get('AWS_BUCKET', None)
-
         if audio_file:
             self.audio_file = Path(audio_file)
 
@@ -51,17 +49,18 @@ class AmazonEnv():
         self.key = check_key
 
 
-
-    def upload_audio_file(self):
+    def upload_audio_file(self, **kwargs):
         """Loads file to amazon s3 location. 
         This is a convenience wrapper for storage.upload_file
         """
-        return storage.upload_file(str(self.audio_file), Bucket=self.bucket, Key=self.key)
+        storage.upload_file(str(self.audio_file), Bucket=self.bucket, Key=self.key, **kwargs)
+        self.is_uploaded=True
 
 
     def start_transcription(
         self,
         *,
+        language:str = 'en-US',
         vocabulary: typing.Optional[str]=None,
         speaker_count: int = 0,
     ):
@@ -94,7 +93,7 @@ class AmazonEnv():
     def from_job(job_name: str) -> Job:
         """Create a Job Object based on the TranscriptiobJobName"""
         job = transcribe.get_transcription_job(TranscriptionJobName=job_name)
-        return AmazonJob.from_uri(
+        return AmazonEnv.from_uri(
             job["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
         )
 
@@ -102,7 +101,7 @@ class AmazonEnv():
     def from_uri(uri: str) -> Job:
         """Create a Job Object based on the TranscriptFileUri"""
         response = httpx.get(uri)
-        return AmazonJob.from_json(response.json())
+        return AmazonEnv.from_json(response.json())
 
     def build(
             self,
@@ -115,87 +114,11 @@ class AmazonEnv():
         
         Parameters
         ----------
-        split_at: List
+        split_at: list
             punctuation objects to split for markers
-
-        Returns
-        -------
-        Job
+        ignore_speakers: bool
         """
-        job = transcribe.get_transcription_job(TranscriptionJobName=self.key)
-        uri = job["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
-        response = httpx.get(uri)
-
-        transcription = response.json()
-        markers = []
-        segments = transcription["results"]["items"]
-
-        if "speaker_labels" in transcription["results"]:
-            labels = transcription["results"]["speaker_labels"]
-            speakers = {x: Speaker(base_name=x) for x in range(labels["speakers"])}
-
-            for segment in labels["segments"]:
-                start_time = segment["start_time"]
-                end_time = segment["end_time"]
-
-                # get the speaker of the label
-                speaker = speakers[segment['speaker_label']]
-                content = text_in_range(
-                    segments,
-                    start_time=start_time,
-                    end_time=end_time,
-                )
-
-        else: # No speakers provided
-            speakers = {}
-            items_segments = list(more_itertools.split_when(
-                segments,
-                lambda x,_: x["alternatives"][0]["content"] in split_at
-            ))
-
-            logging.debug(items_segments)
-
-            for index, item in enumerate(items_segments):
-                start_time = timedelta(seconds=float(item[0]["start_time"]))
-                end_time = timedelta(seconds=float(item[-2]["end_time"]))
-                content = ""
-
-                for word_block in item:
-                    if word_block["type"] == "punctuation":
-                        content += word_block["alternatives"][0]["content"]
-                    else:
-                        content += " " + word_block["alternatives"][0]["content"]
-
-                marker = Marker(
-                    start_time=start_time, end_time=end_time, content=content
-                )
-                markers.append(marker)
-
-        # add alternatives
-        alternatives = []
-        for item in segments:
-
-            if item["type"] == "pronunciation":
-
-                for alt in item["alternatives"]:
-                    alternatives.append(
-                        Alternative(
-                            start_time=item["start_time"],
-                            content=alt["content"],
-                            confidence=alt["confidence"],
-                            tag="orignal",
-                            _type="pronunciation",
-                        )
-                    )
-
-        new_job = Job()
-        new_job.base_text = transcription["results"]["transcripts"][0]["transcript"]
-        new_job.transcription = transcription
-        new_job.speakers = speakers
-        new_job.markers = markers
-        new_job.alternatives = alternatives
-        
-        return new_job
+        pass
 
     @classmethod
     def from_json(cls, json_file) -> Job:
@@ -205,7 +128,7 @@ class AmazonEnv():
 
         if "speaker_labels" in results:
             labels = json_file["results"]["speaker_labels"]
-            segments = labels["segments"]:
+            segments = labels["segments"]
             
         else:
             segment_content = more_itertools.split_when(
@@ -221,14 +144,6 @@ class AmazonEnv():
                     'speaker': None,
                     })
 
-        return Job(
-            base_text=results["transcripts"][0]["transcript"],
-            key=json_file["jobName"],
-            transcription=json_file,
-            speakers=speakers,
-            markers=gen_markers(segments),
-            alternatives=gen_alternatives(results['items']),
-        )
 
 
 def from_transcription_jobs(**kwargs):
