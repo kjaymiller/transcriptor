@@ -4,33 +4,86 @@
 #
 #    pip-compile
 #
-attrs==20.2.0             # via pytest
-boto3==1.15.14            # via -r requirements.in
-botocore==1.18.14         # via boto3, s3transfer
-certifi==2020.6.20        # via httpx, requests
-chardet==3.0.4            # via requests
-coverage==5.3             # via pytest-cov
-h11==0.11.0               # via httpcore
-httpcore==0.12.0          # via httpx
-httpx==0.16.0             # via -r requirements.in
-idna==2.10                # via requests, rfc3986
-iniconfig==1.0.1          # via pytest
-jmespath==0.10.0          # via boto3, botocore
-more-itertools==8.5.0     # via -r requirements.in
-packaging==20.4           # via pytest
-pluggy==0.13.1            # via pytest
-py==1.9.0                 # via pytest
-pyparsing==2.4.7          # via packaging
-pytest-cov==2.10.1        # via -r requirements.in
-pytest-mock==3.3.1        # via -r requirements.in
-pytest==6.1.1             # via -r requirements.in, pytest-cov, pytest-mock
-python-dateutil==2.8.1    # via botocore
-requests-mock==1.8.0      # via -r requirements.in
-requests==2.24.0          # via requests-mock
-rfc3986[idna2008]==1.4.0  # via httpx
-s3transfer==0.3.3         # via boto3
-six==1.15.0               # via packaging, python-dateutil, requests-mock
-slugify==0.0.1            # via -r requirements.in
-sniffio==1.1.0            # via httpcore, httpx
-toml==0.10.1              # via pytest
-urllib3==1.25.10          # via botocore, requests
+anyio==3.6.1
+    # via httpcore
+attrs==20.2.0
+    # via pytest
+boto3==1.15.14
+    # via -r requirements.in
+botocore==1.18.14
+    # via
+    #   boto3
+    #   s3transfer
+certifi==2020.6.20
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
+chardet==3.0.4
+    # via requests
+coverage==5.3
+    # via pytest-cov
+h11==0.11.0
+    # via httpcore
+httpcore==0.15.0
+    # via httpx
+httpx==0.23.0
+    # via -r requirements.in
+idna==2.10
+    # via
+    #   anyio
+    #   requests
+    #   rfc3986
+iniconfig==1.0.1
+    # via pytest
+jmespath==0.10.0
+    # via
+    #   boto3
+    #   botocore
+more-itertools==8.5.0
+    # via -r requirements.in
+packaging==20.4
+    # via pytest
+pluggy==0.13.1
+    # via pytest
+py==1.9.0
+    # via pytest
+pyparsing==2.4.7
+    # via packaging
+pytest==6.1.1
+    # via
+    #   -r requirements.in
+    #   pytest-cov
+    #   pytest-mock
+pytest-cov==2.10.1
+    # via -r requirements.in
+pytest-mock==3.3.1
+    # via -r requirements.in
+python-dateutil==2.8.1
+    # via botocore
+requests==2.24.0
+    # via requests-mock
+requests-mock==1.8.0
+    # via -r requirements.in
+rfc3986[idna2008]==1.4.0
+    # via httpx
+s3transfer==0.3.3
+    # via boto3
+six==1.15.0
+    # via
+    #   packaging
+    #   python-dateutil
+    #   requests-mock
+slugify==0.0.1
+    # via -r requirements.in
+sniffio==1.1.0
+    # via
+    #   anyio
+    #   httpcore
+    #   httpx
+toml==0.10.1
+    # via pytest
+urllib3==1.25.10
+    # via
+    #   botocore
+    #   requests
